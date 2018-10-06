@@ -19,9 +19,11 @@ class laberinto():
     imagen_recorrida = 0
     colores = [255,0,0]
     imagen_mostrar = 0
-    tamaño_agente = 5
+    tamaño_agente = 4
     estados_disponibles = [0,0,0,0]  #derecha, arriba, izquierda, abajo
-    
+    posiciones_disponibles =[0,0,0,0]
+    puntosmeta = []
+    metaalc = False
     def __init__(self,ruta,colores = [255,0,0]):
         self.imagen = io.imread(ruta)
         self.filas,self.columnas,self.canales = self.imagen.shape
@@ -29,10 +31,33 @@ class laberinto():
             for j in range(self.columnas):
                 if self.imagen[i,j,0]>10:
                     self.estados_validos.append((i,j))
+                if self.imagen[i,j,0]==0 and self.imagen[i,j,1]==0 and self.imagen[i,j,2]>0:
+                    if i-1 > 0:
+                        if self.imagen[i-1,j,1]>0:
+                            for incremento in range(self.tamaño_agente+2):
+                                self.puntosmeta.append((i-incremento,j))
+                    if i+1<self.filas:
+                        if self.imagen[i+1,j,1]>0:
+                            for incremento in range(self.tamaño_agente+2):
+                                self.puntosmeta.append((i+incremento,j))
+                    if j-1 > 0:
+                        if self.imagen[i,j-1,1]>0:
+                            for incremento in range(self.tamaño_agente+2):
+                                self.puntosmeta.append((i,j-incremento))
+                    if j+1 < self.columnas:
+                        if self.imagen[i,j+1,1]>0:
+                            for incremento in range(self.tamaño_agente+2):
+                                self.puntosmeta.append((i,j+incremento))
         self.numero_de_estados = len(self.estados_validos)
         self.imagen_mostrar = np.copy(self.imagen)
         self.imagen_recorrida = np.copy(self.imagen)
+        for puntos in self.puntosmeta:
+            x,y = puntos
+            self.imagen_recorrida[x,y,0] = 255
+            self.imagen_recorrida[x,y,1] = 255
+            self.imagen_recorrida[x,y,2] = 0
         self.colores = colores
+        
         
     def set_player(self,semilla):
         np.random.seed(semilla)
@@ -53,47 +78,38 @@ class laberinto():
 
     def acciones_validas(self):
         #######################derecha, arriba, izquierda, abajo
-        ######################izquierdaiii
+        ######################izquierda
         x,y = self.agente
         if y-1 > self.tamaño_agente:
-            Agente_M = self.imagen[x:x+self.tamaño_agente,y-1:y-1+self.tamaño_agente,0]
-            espacion_disponible = np.sum(Agente_M>10)
-            if espacion_disponible==self.tamaño_agente**2:
-                self.estados_disponibles[2] = 1
-            else:
-                self.estados_disponibles[2] = 0
+            self.check(x,y-1,2)
         else:
             self.estados_disponibles[2] = 0
         ################# Arriba
         if x-1 > self.tamaño_agente:
-            Agente_M = self.imagen[x-1:x-1+self.tamaño_agente,y:y+self.tamaño_agente,0]
-            espacion_disponible = np.sum(Agente_M>10)
-            if espacion_disponible==self.tamaño_agente**2:
-                self.estados_disponibles[1] = 1
-            else:
-                self.estados_disponibles[1] = 0
+            self.check(x-1,y,1)
         else:
             self.estados_disponibles[1] = 0
         ################# derecha
         if y+1 < self.imagen.shape[1]-self.tamaño_agente:
-            Agente_M = self.imagen[x:x+self.tamaño_agente,y+1:y+1+self.tamaño_agente,0]
-            espacion_disponible = np.sum(Agente_M>10)
-            if espacion_disponible==self.tamaño_agente**2:
-                self.estados_disponibles[0] = 1
-            else:
-                self.estados_disponibles[0] = 0
+            self.check(x,y+1,0)
         else:
             self.estados_disponibles[0] = 0
         ################# Abajo
         if x+1 < self.imagen.shape[0]-self.tamaño_agente:
-            Agente_M = self.imagen[x+1:x+1+self.tamaño_agente,y:y+self.tamaño_agente,0]
-            espacion_disponible = np.sum(Agente_M>10)
-            if espacion_disponible==self.tamaño_agente**2:
-                self.estados_disponibles[3] = 1
-            else:
-                self.estados_disponibles[3] = 0
+            self.check(x+1,y,3)
         else:
             self.estados_disponibles[3] = 0
+
+            
+    def check(self,x,y,estado):
+        Agente_M = self.imagen[x:x+self.tamaño_agente,y:y+self.tamaño_agente,0]
+        espacion_disponible = np.sum(Agente_M>10)
+        if espacion_disponible==self.tamaño_agente**2:
+            self.estados_disponibles[estado] = 1
+            self.posiciones_disponibles[estado] = (x,y)
+        else:
+            self.estados_disponibles[estado] = 0
+            self.posiciones_disponibles[estado] = 0
     
     def dibuja_agente(self):
         x,y = self.agente
@@ -101,54 +117,44 @@ class laberinto():
         self.imagen_mostrar[x:x+self.tamaño_agente,y:y+self.tamaño_agente,0] = self.colores[0]
         self.imagen_mostrar[x:x+self.tamaño_agente,y:y+self.tamaño_agente,1] = self.colores[1]
         self.imagen_mostrar[x:x+self.tamaño_agente,y:y+self.tamaño_agente,2] = self.colores[2]
-        
         self.imagen_recorrida[x:x+self.tamaño_agente,y:y+self.tamaño_agente,0] = self.colores[1]
         self.imagen_recorrida[x:x+self.tamaño_agente,y:y+self.tamaño_agente,1] = self.colores[0]
         self.imagen_recorrida[x:x+self.tamaño_agente,y:y+self.tamaño_agente,2] = self.colores[2]
-    
-    def mov_iz(self):
-        if self.estados_disponibles[2] == 1:
-            x,y = self.agente
-            y=y-1
+
+    def mov(self,movl,x,y):
+        if self.estados_disponibles[movl] == 1:
             self.agente = (x,y)
             self.dibuja_agente()
             self.acciones_validas()
         else:
-            print('Tope pared')
+            print('Tope pared')   
+        self.metaalcanzada()
+
+    def mov_iz(self):
+        x,y = self.agente
+        y=y-1
+        self.mov(2,x,y) 
         
     def mov_arr(self):
-        if self.estados_disponibles[1] == 1:
-            x,y = self.agente
-            x=x-1
-            self.agente = (x,y)
-            self.dibuja_agente()
-            self.acciones_validas()
-        else:
-            print('Tope pared')
+        x,y = self.agente
+        x=x-1
+        self.mov(1,x,y) 
             
     def mov_der(self):
-        if self.estados_disponibles[0] == 1:
-            x,y = self.agente
-            y=y+1
-            self.agente = (x,y)
-            self.dibuja_agente()
-            self.acciones_validas()
-        else:
-            print('Tope pared')          
+        x,y = self.agente
+        y=y+1       
+        self.mov(0,x,y)     
             
     def mov_ab(self):
-        if self.estados_disponibles[3] == 1:
-            x,y = self.agente
-            x=x+1
-            self.agente = (x,y)
-            self.dibuja_agente()
-            self.acciones_validas()
-        else:
-            print('Tope pared')    
-
-
-    def set_posicion(self,posicion):
+        x,y = self.agente
+        x=x+1
+        self.mov(3,x,y)
+        
+    def set_agente(self,posicion):
         self.agente = posicion
+        self.dibuja_agente()
+        self.acciones_validas()
+        self.metaalcanzada()
 
     def get_estados_validos(self):
         return self.estados_validos
@@ -167,11 +173,18 @@ class laberinto():
 
     def get_agente(self):
         return self.agente
-         
+    
+    def get_posiciones_disponibles(self):
+        return self.posiciones_disponibles
+    def metaalcanzada(self):
+        if self.agente in self.puntosmeta:
+            self.metaalc = True
+            print('Meta alcanzada')
+    def resetimrecorrida(self):
+         self.imagen_recorrida = np.copy(self.imagen)
 if __name__ == '__main__':
     import cv2
     Mi_laberinto = laberinto('Laberinto.png')
-    estados = Mi_laberinto.get_estados_validos()
     Mi_laberinto.set_player(8)
     while True:
         imagen_mostrar = Mi_laberinto.get_imagen_mostrar()
