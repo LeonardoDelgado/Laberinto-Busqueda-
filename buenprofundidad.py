@@ -53,18 +53,15 @@ class bep_l:
         self.posibles_movimientos = posibles_movimientos
         self.revisaryagregar()
         
-        
 if __name__ == '__main__':
     import cv2
     from laberinto import laberinto
-    Mi_laberinto = laberinto('Laberinto3.png')
-    Mi_laberinto.set_player(50)
+    Mi_laberinto = laberinto('Laberinto.png')
+    Mi_laberinto.set_player(10)#50,10
     busqueda_en_profundidad = bep_l(Mi_laberinto.get_agente(),
                                     Mi_laberinto.get_posiciones_disponibles())
     Mi_laberinto.get_posiciones_disponibles()
     busqueda_en_profundidad.get_movimiento()
-    busqueda_en_profundidad.cola
-    busqueda_en_profundidad.rama
     while busqueda_en_profundidad.muevete != 0 and Mi_laberinto.metaalc == False:
         imagen_mostrar = Mi_laberinto.get_imagen_mostrar()
         imagen_recorrida = Mi_laberinto.get_imagen_recorrida()
@@ -84,8 +81,8 @@ if __name__ == '__main__':
         pulsacion = cv2.waitKey(1)
         if pulsacion == ord('i'):
             break
-        Mi_laberinto.set_agente(punto)
-        
+        Mi_laberinto.set_agente(punto) 
+    arbol = busqueda_en_profundidad.arbol
         
         
     cv2.destroyAllWindows()    
