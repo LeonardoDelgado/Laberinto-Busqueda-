@@ -15,11 +15,14 @@ class beal:
     cola = []
     ruta_actual = []
     nodo = 0
-    def __init__(self,raiz,posibles_movimientos):
+    tamaño = 0
+    def __init__(self,raiz,posibles_movimientos,tamaño):
         self.raiz = raiz
+        self.tamaño = tamaño
         self.cola.append(raiz)
         self.posibles_movimientos = posibles_movimientos
         self.revisaryagregar()
+        
         
     def revisaryagregar(self):
         self.muevete = 0
@@ -30,12 +33,13 @@ class beal:
             else:
                 self.nodo = self.ruta_actual
                 self.ruta_actual = [self.ruta_actual]
-            if self.nodo not in self.visitados:
-                self.visitados.append(self.nodo)
+            self.marcarnodosvisitados(self.nodo)
             for movimiento in self.posibles_movimientos:
-                if movimiento != 0 and movimiento not in self.visitados:
-                    self.visitados.append(movimiento)
-                    self.cola.append(self.ruta_actual+[movimiento])
+                if movimiento != 0:
+                    a = self.movnotinvisitados(movimiento)
+                    if not(a):
+                        self.marcarnodosvisitados(movimiento)
+                        self.cola.append(self.ruta_actual+[movimiento])
             
             if type(self.cola[0])==type([]):
                 self.muevete = self.cola[0][-1]
@@ -49,32 +53,52 @@ class beal:
         
     def get_movimiento(self):
         return self.muevete
-        
+    
+    def marcarnodosvisitados(self, nodo):
+        x,y = nodo
+        for x1 in range(x,x+self.tamaño):
+            for y1  in range(y,y+self.tamaño):
+                if (x1,y1) not in self.visitados:
+                    self.visitados.append((x1,y1))
+                
+    def movnotinvisitados(self,movimiento):
+        x,y = movimiento
+        visitado = True 
+        for x1 in range(x,x+self.tamaño):
+            for y1  in range(y,y+self.tamaño):
+                if (x1,y1) not in self.visitados:
+                    visitado = False
+                    return visitado
+        return visitado                    
     
 if __name__ == '__main__':
     import cv2
     from laberinto import laberinto
-    Mi_laberinto = laberinto('Laberinto.png')
+    Mi_laberinto = laberinto('Laberinto3.png')
     Mi_laberinto.set_player(10)#50,10
-    busqueda_en_profundidad = beal(Mi_laberinto.get_agente(),
-                                    Mi_laberinto.get_posiciones_disponibles())
-
-    while busqueda_en_profundidad.muevete != 0 and Mi_laberinto.metaalc == False:
+    busqueda_en_anchura = beal(Mi_laberinto.get_agente(),
+                                    Mi_laberinto.get_posiciones_disponibles(),
+                                    tamaño = Mi_laberinto.tamaño_agente)
+    Mi_laberinto.set_agente(busqueda_en_anchura.get_movimiento())
+    while busqueda_en_anchura.muevete != 0:
+        busqueda_en_anchura.mov(Mi_laberinto.get_posiciones_disponibles())
+        Mi_laberinto.set_agente(busqueda_en_anchura.get_movimiento())
+        if Mi_laberinto.metaalc == True:
+            break
         imagen_mostrar = Mi_laberinto.get_imagen_mostrar()
         imagen_recorrida = Mi_laberinto.get_imagen_recorrida()
-        cv2.imshow('Laberinto',cv2.resize(imagen_mostrar,(500, 500), interpolation = cv2.INTER_CUBIC))
-        cv2.imshow('color',cv2.resize(imagen_recorrida,(500, 500), interpolation = cv2.INTER_CUBIC))
+        cv2.imshow('Laberinto',cv2.resize(imagen_mostrar,(600, 600), interpolation = cv2.INTER_CUBIC))
+        cv2.imshow('color',cv2.resize(imagen_recorrida,(600, 600), interpolation = cv2.INTER_CUBIC))
         pulsacion = cv2.waitKey(1)
         if pulsacion == ord('i'):
             break
-        Mi_laberinto.set_agente(busqueda_en_profundidad.get_movimiento())
-        busqueda_en_profundidad.mov(Mi_laberinto.get_posiciones_disponibles())
+
     Mi_laberinto.resetimrecorrida()
-    for punto in busqueda_en_profundidad.cola[0]:
+    for punto in busqueda_en_anchura.cola[0]:
         imagen_mostrar = Mi_laberinto.get_imagen_mostrar()
         imagen_recorrida = Mi_laberinto.get_imagen_recorrida()
-        cv2.imshow('Laberinto',cv2.resize(imagen_mostrar,(500, 500), interpolation = cv2.INTER_CUBIC))
-        cv2.imshow('color',cv2.resize(imagen_recorrida,(500, 500), interpolation = cv2.INTER_CUBIC))
+        cv2.imshow('Laberinto',cv2.resize(imagen_mostrar,(600, 600), interpolation = cv2.INTER_CUBIC))
+        cv2.imshow('color',cv2.resize(imagen_recorrida,(600, 600), interpolation = cv2.INTER_CUBIC))
         pulsacion = cv2.waitKey(1)
         if pulsacion == ord('i'):
             break

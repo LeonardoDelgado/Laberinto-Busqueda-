@@ -19,7 +19,7 @@ class laberinto():
     imagen_recorrida = 0
     colores = [255,0,0]
     imagen_mostrar = 0
-    tamaño_agente = 4
+    tamaño_agente = 1
     estados_disponibles = [0,0,0,0]  #derecha, arriba, izquierda, abajo
     posiciones_disponibles =[0,0,0,0]
     puntosmeta = []
@@ -34,19 +34,19 @@ class laberinto():
                 if self.imagen[i,j,0]==0 and self.imagen[i,j,1]==0 and self.imagen[i,j,2]>0:
                     if i-1 > 0:
                         if self.imagen[i-1,j,1]>0:
-                            for incremento in range(self.tamaño_agente+2):
+                            for incremento in range(self.tamaño_agente+1):
                                 self.puntosmeta.append((i-incremento,j))
                     if i+1<self.filas:
                         if self.imagen[i+1,j,1]>0:
-                            for incremento in range(self.tamaño_agente+2):
+                            for incremento in range(self.tamaño_agente+1):
                                 self.puntosmeta.append((i+incremento,j))
                     if j-1 > 0:
                         if self.imagen[i,j-1,1]>0:
-                            for incremento in range(self.tamaño_agente+2):
+                            for incremento in range(self.tamaño_agente+1):
                                 self.puntosmeta.append((i,j-incremento))
                     if j+1 < self.columnas:
                         if self.imagen[i,j+1,1]>0:
-                            for incremento in range(self.tamaño_agente+2):
+                            for incremento in range(self.tamaño_agente+1):
                                 self.puntosmeta.append((i,j+incremento))
         self.numero_de_estados = len(self.estados_validos)
         self.imagen_mostrar = np.copy(self.imagen)
@@ -80,12 +80,12 @@ class laberinto():
         #######################derecha, arriba, izquierda, abajo
         ######################izquierda
         x,y = self.agente
-        if y-1 > self.tamaño_agente:
+        if y-1 > 0:#self.tamaño_agente:
             self.check(x,y-1,2)
         else:
             self.estados_disponibles[2] = 0
         ################# Arriba
-        if x-1 > self.tamaño_agente:
+        if x-1 > 0:#self.tamaño_agente:
             self.check(x-1,y,1)
         else:
             self.estados_disponibles[1] = 0
@@ -176,10 +176,12 @@ class laberinto():
     
     def get_posiciones_disponibles(self):
         return self.posiciones_disponibles
+    
     def metaalcanzada(self):
         if self.agente in self.puntosmeta:
             self.metaalc = True
             print('Meta alcanzada')
+            
     def resetimrecorrida(self):
          self.imagen_recorrida = np.copy(self.imagen)
 if __name__ == '__main__':
